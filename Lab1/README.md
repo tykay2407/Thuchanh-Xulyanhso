@@ -132,3 +132,109 @@ img = cv2.imread(input_path)
         else:
             print(f"Lỗi: Không thể đọc {filename}")
 
+
+-Cau 6-
++Nhập thư viện
+import numpy as np: 
+import imageio.v2 as iio 
+import scipy.ndimage as sn
+import os
+import matplotlib.pylab as plt
+
++Đặt tên thư mục chứa các hình ảnh gốc
+input_folder = 'Exercise'
++Đặt tên thư mục đầu ra nơi lưu các hình ảnh đã qua xử lý (khử nhiễu). Các ảnh đã qua lọc sẽ được lưu vào thư mục này.
+output_folder = 'Exercise_Filtered'
++Tạo thư mục Exercise_Filtered nếu chưa tồn tại
+os.makedirs(output_folder, exist_ok=True):
++Tạo một bộ lọc Mean với kích thước 5x5
+mean_filter_kernel = np.ones((5, 5)) / 25
++Duyệt qua tất cả các tệp tin trong thư mục Exercise
+for filename in os.listdir(input_folder): 
++Tạo đường dẫn đầy đủ đến tệp ảnh hiện tại.
+input_path = os.path.join(input_folder, filename): Tạo đường dẫn đầy đủ đến tệp ảnh hiện tại.
++Đọc ảnh từ input_path và chuyển ảnh thành ảnh xám (grayscale) bằng as_gray=True. Sau đó, chuyển đổi kiểu dữ liệu của ảnh thành np.uint8
+img = iio.imread(input_path, as_gray=True).astype(np.uint8)
++Kiểm tra ảnh có hợp lệ hay không
+if img is not None
+
+Áp dụng các bộ lọc và lưu ảnh đã áp dụng bộ lọc
+
+Mean Filter:
+
+mean_filtered_img = sn.convolve(img, mean_filter_kernel).astype(np.uint8)
+
+iio.imsave(os.path.join(output_folder, f"mean_{filename}"), mean_filtered_img)
+Median Filter:
+
+median_filtered_img = sn.median_filter(img, size=5, mode='reflect') 
+
+iio.imsave(os.path.join(output_folder, f"median_{filename}"), median_filtered_img)
+
+Max Filter:
+
+max_filtered_img = sn.maximum_filter(img, size=5, mode='reflect')
+
+iio.imsave(os.path.join(output_folder, f"max_{filename}"), max_filtered_img)
+
+Min Filter:
+
+min_filtered_img = sn.minimum_filter(img, size=5, mode='reflect')
+
+iio.imsave(os.path.join(output_folder, f"min_{filename}"), min_filtered_img)
+
+-Cau7-
+
++Nhập thư viện
+import numpy as np
+import imageio.v2 as iio
+import scipy.ndimage as sn
+from skimage import feature, filters
+import os
+import matplotlib.pylab as plt
+
++Tạo thư mục đầu ra
+input_folder = 'exercise'
+output_folder = 'Exercise_cau7'
+
++Bộ lọc Mean và Prewitt
+mean_filter_kernel = np.ones((5, 5)) / 25
+prewitt_x = np.array([[ -1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+prewitt_y = np.array([[ -1, -1, -1], [ 0,  0,  0], [ 1,  1,  1]])
+
++Đọc và xử lý hình ảnh trong thư mục
+for filename in os.listdir(input_folder):
+    input_path = os.path.join(input_folder, filename)
+    img = iio.imread(input_path, as_gray=True).astype(np.uint8)
+
++Khử nhiễu với Mean Filter
+denoised_img = sn.convolve(img, mean_filter_kernel).astype(np.uint8)
+
++Áp dụng các bộ lọc biên và lưu kết quả
+
+sobel_edges = filters.sobel(denoised_img)
+iio.imsave(os.path.join(output_folder, f"sobel_edges_{filename}"), sobel_edges)
+-Áp dụng bộ lọc Sobel để phát hiện biên. Bộ lọc Sobel tính gradient của ảnh theo các hướng ngang và dọc.
+
+
+canny_edges = feature.canny(denoised_img, sigma=3)
+iio.imsave(os.path.join(output_folder, f"canny_edges_{filename}"), canny_edges)
+-Áp dụng bộ lọc Canny để phát hiện biên. Tham số sigma=3 giúp làm mờ ảnh trước khi phát hiện biên để giảm nhiễu.
+
+
+grad_x = sn.convolve(denoised_img, prewitt_x)
+grad_y = sn.convolve(denoised_img, prewitt_y)
+prewitt_edges = np.hypot(grad_x, grad_y)
+prewitt_edges = np.uint8(prewitt_edges / np.max(prewitt_edges) * 255)
+iio.imsave(os.path.join(output_folder, f"prewitt_edges_{filename}"), prewitt_edges)
+- Áp dụng bộ lọc Prewitt theo các hướng ngang và dọc để tính gradient.
+- Kết hợp các gradient để tính toán tổng gradient (biên).
+- Chuẩn hóa ảnh biên vào phạm vi [0, 255].
+
+
+laplace_edges = sn.laplace(denoised_img, mode='reflect')
+iio.imsave(os.path.join(output_folder, f"laplace_edges_{filename}"), laplace_edges)
+-Áp dụng bộ lọc Laplace để phát hiện biên, dựa trên đạo hàm bậc hai.
+
+-Cau8-
+
