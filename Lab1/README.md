@@ -237,4 +237,100 @@ iio.imsave(os.path.join(output_folder, f"laplace_edges_{filename}"), laplace_edg
 -Áp dụng bộ lọc Laplace để phát hiện biên, dựa trên đạo hàm bậc hai.
 
 -Cau8-
++Nhập thư viện
+import numpy as np
+import imageio.v2 as iio
+import scipy.ndimage as sn
+import os
+import random
+
++Tạo thư mục đầu vào và đầu ra
+input_folder = 'Exercise'
+output_folder = 'Exercise_cau8'
+os.makedirs(output_folder, exist_ok=True)
+
++Tạo bộ lọc Mean Filter để khử nhiễu
+mean_filter_kernel = np.ones((5, 5)) / 25
+
++Đọc và xử li các hình ảnh trong thư mục
+for filename in os.listdir(input_folder):
+    input_path = os.path.join(input_folder, filename)
+
++Đọc ảnh
+img = iio.imread(input_path)
+
++Khử nhiễu với Mean Filter
+denoised_img = sn.convolve(img, mean_filter_kernel[..., None]).astype(np.uint8)
+
++Đổi màu ngẫu nhiên cho mỗi pixel (theo 3 kênh RGB)
+ height, width, _ = denoised_img.shape
+        for i in range(height):
+            for j in range(width):
+                # Thay đổi giá trị RGB của mỗi pixel ngẫu nhiên trong phạm vi [0, 255]
+                denoised_img[i, j] = [random.randint(0, 255) for _ in range(3)]
+                
++Lưu ảnh mới
+iio.imsave(os.path.join(output_folder, f"colored_{filename}"), denoised_img)
+
+
+-Cau9-
+
++Nhập thư viện
+import numpy as np
+import imageio.v2 as iio
+import scipy.ndimage as sn
+import os
+import random
+import matplotlib.pylab as plt
+from skimage import color
+
++Tạo thư mục đầu vào và đầu ra 
+input_folder = 'Exercise'
+output_folder = 'Exercise_cau9'
+os.makedirs(output_folder, exist_ok=True)
+
++Bộ lọc MeanFilter để khử nhiễu
+mean_filter_kernel = np.ones((5, 5)) / 25
+
++Hàm khử nhiễu và đổi màu HSV ngẫu nhiên
+def process_image(img, used_hues):
+    # Khử nhiễu với bộ lọc Mean
+    denoised_img = sn.convolve(img, mean_filter_kernel[..., None]).astype(np.uint8)
+    
+    # Chuyển ảnh từ RGB sang HSV
+    hsv_img = color.rgb2hsv(denoised_img)
+    
+    # Đổi kênh Hue (H) ngẫu nhiên nhưng không trùng lặp
+    height, width, _ = hsv_img.shape
+    for i in range(height):
+        for j in range(width):
+            # Chọn một giá trị Hue ngẫu nhiên mà chưa được sử dụng
+            random_hue = random.random()  # Chọn ngẫu nhiên giá trị Hue giữa 0 và 1
+            while random_hue in used_hues:  # Đảm bảo không trùng lặp
+                random_hue = random.random()
+            hsv_img[i, j, 0] = random_hue
+            used_hues.add(random_hue)
+
++Chuyển ảnh lại từ HSV sang RGB
+ rgb_img = color.hsv2rgb(hsv_img)
+    return np.uint8(rgb_img * 255)
+
++Đọc và xử lý các tệp ảnh trong thư mục
+used_hues = set()  # Set để lưu các giá trị Hue đã sử dụng
+
+for idx, filename in enumerate(os.listdir(input_folder)):
+    input_path = os.path.join(input_folder, filename)
+    
+    # Đọc ảnh
+    img = iio.imread(input_path)
+
+    if img is not None:
+        # Áp dụng khử nhiễu và đổi màu HSV ngẫu nhiên
+        processed_img = process_image(img, used_hues)
+        
+        # Lưu ảnh mới đã thay đổi màu
+        output_path = os.path.join(output_folder, f"colored_hsv_{idx+1}.png")
+        iio.imsave(output_path, processed_img)
+                
+           
 
